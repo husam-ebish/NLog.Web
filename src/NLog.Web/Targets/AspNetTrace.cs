@@ -1,4 +1,5 @@
 ﻿using System.Web;
+using NLog.Config;
 using NLog.Targets;
 
 namespace NLog.Web.Targets
@@ -13,6 +14,24 @@ namespace NLog.Web.Targets
     [Target("AspNetTrace")]
     public class AspNetTraceTarget : TargetWithLayout
     {
+
+        /// <summary>
+        /// Context for DI
+        /// </summary>
+        private IHttpContextAccessor _httpContextAccessor;
+
+
+        /// <summary>
+        /// Provides access to the current request HttpContext.
+        /// </summary>
+        /// <returns>HttpContextAccessor or <c>null</c></returns>
+        [NLogConfigurationIgnoreProperty]
+        internal IHttpContextAccessor HttpContextAccessor
+        {
+            get => _httpContextAccessor ?? (_httpContextAccessor = new DefaultHttpContextAccessor());
+            set => _httpContextAccessor = value;
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="T:NLog.Targets.TargetWithLayout"/> class.
         /// </summary>
@@ -35,7 +54,7 @@ namespace NLog.Web.Targets
         /// <param name="logEvent">The logging event.</param>
         protected override void Write(LogEventInfo logEvent)
         {
-            HttpContext context = HttpContext.Current;
+            var context = HttpContextAccessor.HttpContext;
 
             if (context == null)
             {
